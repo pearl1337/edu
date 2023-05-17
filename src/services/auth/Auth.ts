@@ -4,7 +4,7 @@ import { HTTPClientType } from "../../http/HTTPClient";
 import { LocalStorage } from "../storage/Storage";
 
 interface LoginCredentials {
-  name: string;
+  email: string;
   password: string;
 }
 
@@ -18,12 +18,12 @@ class AuthService extends Service {
     super(props);
   }
 
-  async login(credentials: LoginCredentials): Promise<void> {
+  async login(credentials: LoginCredentials): Promise<any> {
     try {
-      console.log(credentials);
-      return;
+      const response = await this.HTTPClient.post<any>("/signin", credentials);
+      return [null, response];
     } catch (error) {
-      console.error(error);
+      return [error];
     }
   }
 
@@ -33,7 +33,7 @@ class AuthService extends Service {
   }
 }
 
-export const userService = new AuthService({
+export const authService = new AuthService({
   HTTPClient: HTTPClientFactory.create(HTTPClientType.AXIOS, {
     url: {
       postfix: "auth",

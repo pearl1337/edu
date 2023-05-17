@@ -1,4 +1,4 @@
-import { AxiosInstance } from "axios";
+import { AxiosInstance, AxiosError } from "axios";
 import { HTTPClient } from "../HttpClient";
 import { HTTPClientResponse } from "../HttpClient";
 
@@ -11,7 +11,10 @@ export class AxiosHTTPClient implements HTTPClient {
       return [null, data, status];
     } catch (error) {
       console.error(error);
-      return [error];
+      if (error instanceof AxiosError) {
+        return [error.response?.data.message];
+      }
+      return ["Unexpected error"];
     }
   }
 
@@ -24,7 +27,10 @@ export class AxiosHTTPClient implements HTTPClient {
       return [null, data, status];
     } catch (error) {
       console.error(error);
-      return [error];
+      if (error instanceof AxiosError) {
+        return [error.response?.data.message];
+      }
+      return ["Unexpected error"];
     }
   }
 

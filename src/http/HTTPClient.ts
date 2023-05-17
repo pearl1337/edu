@@ -28,4 +28,4 @@ export enum HTTPClientType {
   AXIOS = "axios",
 }
 
-export type HTTPClientResponse<T> = [null, T, number] | [T | any];
+export type HTTPClientResponse<T> = [null, T, number?] | [T | any];
