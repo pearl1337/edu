@@ -44,7 +44,6 @@ async function login(event: Event) {
   };
 
   const [error, data] = await authService.login(credentials);
-
   if (error) {
     errorString.value = error;
     errorSnackbar.value = true;
@@ -54,11 +53,14 @@ async function login(event: Event) {
 }
 </script>
 <template>
-  <v-progress-linear
-    v-if="loading"
-    indeterminate
-    color="yellow-darken-2"
-  ></v-progress-linear>
+  <div class="top-progress">
+    <v-progress-linear
+      v-if="loading"
+      indeterminate
+      color="yellow-darken-2"
+    ></v-progress-linear>
+  </div>
+
   <v-snackbar
     v-model="errorSnackbar"
     multi-line

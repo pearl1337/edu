@@ -20,8 +20,11 @@ class AuthService extends Service {
 
   async login(credentials: LoginCredentials): Promise<any> {
     try {
-      const response = await this.HTTPClient.post<any>("/signin", credentials);
-      return [null, response];
+      const [error, data] = await this.HTTPClient.post<any>(
+        "/signin",
+        credentials
+      );
+      return [error, data];
     } catch (error) {
       return [error];
     }
