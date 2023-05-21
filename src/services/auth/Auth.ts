@@ -1,4 +1,4 @@
-import { Service, ServiceProps } from "../Service";
+import { Service, ServiceProps, ServiceResponse } from "../Service";
 import { HTTPClientFactory } from "../../http/HTTPClientFactory";
 import { HTTPClientType } from "../../http/HTTPClient";
 import { LocalStorage } from "../storage/Storage";
@@ -18,24 +18,74 @@ class AuthService extends Service {
     super(props);
   }
 
-  async login(credentials: LoginCredentials): Promise<any> {
+  public async login(credentials: LoginCredentials): Promise<any> {
     try {
-      const [error, data] = await this.HTTPClient.post<any>(
+      const [error, response] = await this.HTTPClient.post<any>(
         "/signin",
         credentials
       );
-      return [error, data];
+
+      if (error) {
+        return [error];
+      }
+
+      this.storage.write("token", response.access_token);
+      this.storage.write("userData", response.payload);
+
+      return [null, true];
     } catch (error) {
       return [error];
     }
   }
 
-  async signup(credentials: SignupCredentials): Promise<void> {
-    console.log(credentials);
-    return;
+  public async signup(
+    credentials: SignupCredentials
+  ): Promise<ServiceResponse<boolean>> {
+    {
+      const [error, isEmailExists] = await this.isEmailUsed(credentials.email);
+      if (error) {
+        return [error];
+      }
+      if (isEmailExists === true) {
+        return ["Email already exists"];
+      }
+    }
+
+    const [error, key] = await this.HTTPClient.post<string>(
+      "/singup",
+      credentials
+    );
+
+    if (error) {
+      return [error];
+    }
+
+    const [verifyError, response] = await this.HTTPClient.get<{
+      access_token: string;
+      payload: object;
+    }>(`/verify/${key}`);
+
+    if (typeof verifyError === "string") {
+      return [verifyError];
+    }
+
+    this.storage.write("token", response.access_token);
+    this.storage.write("userData", response.payload);
+
+    return [null, true];
+  }
+
+  private async isEmailUsed(email: string): Promise<ServiceResponse<boolean>> {
+    const [error, data] = await this.HTTPClient.get<{ isExists: boolean }>(
+      "/exists",
+      { email }
+    );
+    if (typeof error === "string") {
+      return [error];
+    }
+    return [null, data.isExists];
   }
 }
-
 export const authService = new AuthService({
   HTTPClient: HTTPClientFactory.create(HTTPClientType.AXIOS, {
     url: {

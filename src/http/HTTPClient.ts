@@ -1,6 +1,7 @@
 export interface HTTPClient {
   get<T = unknown>(
     url: string,
+    query?: object,
     headers?: Record<string, string>
   ): Promise<HTTPClientResponse<T>>;
   post<T = unknown>(
@@ -28,4 +29,4 @@ export enum HTTPClientType {
   AXIOS = "axios",
 }
 
-export type HTTPClientResponse<T> = [null, T, number?] | [T | any];
+export type HTTPClientResponse<T> = [null, T, number?] | [string];

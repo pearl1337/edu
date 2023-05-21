@@ -1,20 +1,24 @@
 import { AxiosInstance, AxiosError } from "axios";
+import { Client } from "../Client";
 import { HTTPClient } from "../HttpClient";
 import { HTTPClientResponse } from "../HttpClient";
 
-export class AxiosHTTPClient implements HTTPClient {
-  constructor(private axiosInstance: AxiosInstance) {}
+export class AxiosHTTPClient extends Client implements HTTPClient {
+  constructor(private axiosInstance: AxiosInstance) {
+    super();
+  }
 
-  public async get<T = unknown>(url: string): Promise<HTTPClientResponse<T>> {
+  public async get<T = unknown>(
+    url: string,
+    query?: object
+  ): Promise<HTTPClientResponse<T>> {
     try {
-      const { data, status } = await this.axiosInstance.get<T>(url);
+      const { data, status } = await this.axiosInstance.get<T>(url, {
+        params: { ...(query || {}) },
+      });
       return [null, data, status];
     } catch (error) {
-      console.error(error);
-      if (error instanceof AxiosError) {
-        return [error.response?.data.message];
-      }
-      return ["Unexpected error"];
+      return [this.parseHTTPError(error)];
     }
   }
 
@@ -26,11 +30,7 @@ export class AxiosHTTPClient implements HTTPClient {
       const { data, status } = await this.axiosInstance.post(url, body);
       return [null, data, status];
     } catch (error) {
-      console.error(error);
-      if (error instanceof AxiosError) {
-        return [error.response?.data.message];
-      }
-      return ["Unexpected error"];
+      return [this.parseHTTPError(error)];
     }
   }
 
@@ -41,8 +41,7 @@ export class AxiosHTTPClient implements HTTPClient {
       const { data, status } = await this.axiosInstance.delete(url);
       return [null, data, status];
     } catch (error) {
-      console.error(error);
-      return [error];
+      return [this.parseHTTPError(error)];
     }
   }
 
@@ -54,8 +53,7 @@ export class AxiosHTTPClient implements HTTPClient {
       const { data, status } = await this.axiosInstance.put(url, body);
       return [null, data, status];
     } catch (error) {
-      console.error(error);
-      return [error];
+      return [this.parseHTTPError(error)];
     }
   }
 
@@ -67,8 +65,7 @@ export class AxiosHTTPClient implements HTTPClient {
       const { data, status } = await this.axiosInstance.patch(url, body);
       return [null, data, status];
     } catch (error) {
-      console.error(error);
-      return [error];
+      return [this.parseHTTPError(error)];
     }
   }
 }

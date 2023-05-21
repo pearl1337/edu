@@ -3,49 +3,67 @@ import { ref } from "vue";
 import { authService } from "../services/auth/Auth";
 import { isEmailValid } from "../utils/isEmailValid";
 import { useFetching } from "../composables/useFetching";
+import { Role } from "../models/User";
 import { useRouter } from "vue-router";
-const router = useRouter();
-
-type Email = string;
-type Password = string;
 
 const form = ref<HTMLFormElement | null>(null);
 const errorSnackbar = ref<boolean>(false);
 const errorString = ref<string>("");
-const [onSubmit, loading] = useFetching(login);
+const [onSubmit, loading] = useFetching(signup);
+const router = useRouter();
 
-const email = ref<Email>("123@gmail.com");
-const password = ref<Password>("1234567890");
+const email = ref<string>("asdasd@gmail.com");
+const password = ref<string>("123456789");
+const repeatPassword = ref<string>("123456789");
+const firstName = ref<string>("Test");
+const lastName = ref<string>("Test2");
+const role = ref<string>(Role.STUDENT);
 
 const emailRules = [
-  (v: Email) => !!v || "Email is required",
-  (v: Email) => (v && isEmailValid(v)) || "Invalid email",
+  (v: string) => !!v || "Email is required",
+  (v: string) => (v && isEmailValid(v)) || "Invalid email",
 ];
 const passwordRules = [
-  (v: Password) => !!v || "Password is required",
-  (v: Password) =>
+  (v: string) => !!v || "Password is required",
+  (v: string) =>
     (v && v.length > 8) || "Password must be more than 8 characters",
 ];
+const repeatPasswordRules = [
+  (v: string) => !!v || "Repeat password is required",
+  (v: string) => (v && v == password.value) || "Passwords must match",
+];
+const firstNameRules = [
+  (v: string) => !!v || "First name is required",
+  (v: string) =>
+    (v && v.length < 20) || "First name must be less than 20 characters",
+];
+const lastNameRules = [
+  (v: string) => !!v || "Last name is required",
+  (v: string) =>
+    (v && v.length < 20) || "Last name must be less than 20 characters",
+];
 
-async function login(event: Event) {
+async function signup(event: Event) {
   event.preventDefault();
 
   if (!form.value) {
     return;
   }
-
   const { valid } = await form.value.validate();
-
   if (!valid) {
     return;
   }
 
   const credentials = {
     email: email.value,
+    name: firstName.value,
+    surname: lastName.value,
     password: password.value,
+    role: role.value,
   };
 
-  const [error] = await authService.login(credentials);
+  const [error] = await authService.signup(credentials);
+
   if (error) {
     errorString.value = error;
     errorSnackbar.value = true;
@@ -79,13 +97,24 @@ async function login(event: Event) {
     </template>
   </v-snackbar>
   <v-sheet width="300" class="mx-auto">
-    <h2 class="mt-10">Log in</h2>
+    <h2 class="mt-10">Sign up</h2>
     <v-form ref="form" class="mt-5" @submit="onSubmit">
       <v-text-field
         v-model="email"
-        :counter="30"
         :rules="emailRules"
         label="Email Address"
+        required
+      ></v-text-field>
+      <v-text-field
+        v-model="firstName"
+        :rules="firstNameRules"
+        label="First name"
+        required
+      ></v-text-field>
+      <v-text-field
+        v-model="lastName"
+        :rules="lastNameRules"
+        label="Last name"
         required
       ></v-text-field>
       <v-text-field
@@ -96,6 +125,17 @@ async function login(event: Event) {
         required
         type="password"
       ></v-text-field>
+      <v-text-field
+        v-model="repeatPassword"
+        :rules="repeatPasswordRules"
+        label="Repeat password"
+        required
+        type="password"
+      ></v-text-field>
+      <v-radio-group v-model="role" inline label="Select your role">
+        <v-radio label="Student" :value="Role.STUDENT"></v-radio>
+        <v-radio label="Teacher" :value="Role.TEACHER"></v-radio>
+      </v-radio-group>
 
       <div class="d-flex flex-column">
         <v-btn
@@ -105,10 +145,10 @@ async function login(event: Event) {
           type="submit"
           :disabled="loading"
         >
-          Login
+          next
         </v-btn>
         <div class="auth-form-links">
-          <router-link :to="{ name: 'SignupPage' }">Sign up</router-link>
+          <router-link :to="{ name: 'LoginPage' }">Log in</router-link>
         </div>
       </div>
     </v-form>
